@@ -16,6 +16,13 @@ public class UserRepository{
         public List<User> getAllUsers(){
             return jdbcTemplate.query("SELECT * FROM Users", BeanPropertyRowMapper.newInstance(User.class));
         }
+        public User getIdUser(int id){
+            return jdbcTemplate.queryForObject("SELECT * FROM Users WHERE ID="+id, BeanPropertyRowMapper.newInstance(User.class));
+        }
+        public User getNameUser(String name){
+            String query = "SELECT * FROM Users WHERE Name='"+name+"'";
+            return jdbcTemplate.queryForObject(query, BeanPropertyRowMapper.newInstance(User.class));
+        }
 
 
     }

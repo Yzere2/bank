@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Random;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,7 +20,17 @@ public class Token {
     String BlikToken;
     String GuidToken;
     String BlikCode;
-
     Instant instant = Instant.now();
+
+    static public String blikCodeGen(String guidToken){
+        Token token = new Token();
+        token.GuidToken=guidToken;
+        Random random = new Random();
+        int upper=899999;
+        int int_random = random.nextInt(upper)+100000;
+
+        token.BlikCode=String.valueOf(int_random);
+        return token.BlikCode;
+    }
 
 }

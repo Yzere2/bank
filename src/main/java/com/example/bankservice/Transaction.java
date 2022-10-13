@@ -15,9 +15,9 @@ import java.util.Date;
 public class Transaction {
 
     int id;
-    int UserId;
-    boolean IsReceived;
-    double Amount;
-    Instant instant = Instant.now();
+    String GuidToken;
+    int IsReceived;
+    float Amount;
+    String BlikToken;
 
 }
