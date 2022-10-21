@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
@@ -17,7 +18,7 @@ public class Transaction {
     int id;
     String GuidToken;
     int IsReceived;
-    float Amount;
+    BigDecimal Amount;
     String BlikToken;
 
 }

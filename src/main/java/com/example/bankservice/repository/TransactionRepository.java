@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.time.Instant;
 import java.util.Base64;
@@ -20,7 +21,7 @@ public class TransactionRepository{
         return jdbcTemplate.query("SELECT * FROM Transactions", BeanPropertyRowMapper.newInstance(Transaction.class));
     }
 
-    public void createTransaction(int execute, String guidToken, int isReceived, float amount, String blikToken) throws SQLException {
+    public void createTransaction(int execute, String guidToken, int isReceived, BigDecimal amount, String blikToken) throws SQLException {
 
         if(execute==1){
             //Connecting to Database
@@ -35,9 +36,9 @@ public class TransactionRepository{
             //Assigning values to statement parameters
             stmt.setString(1, guidToken);
             stmt.setString(2, String.valueOf(isReceived));
-            stmt.setString(3, String.valueOf(amount));
+            if(isReceived==0){stmt.setBigDecimal(3, amount.negate());}
+            if(isReceived==1){stmt.setBigDecimal(3, amount);}
             stmt.setString(4, blikToken);
-            System.out.println(stmt);
             //Execute the statement and add the user
             stmt.executeUpdate();
 

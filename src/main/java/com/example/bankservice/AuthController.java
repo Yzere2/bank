@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.*;
@@ -16,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://terminal.io")
+@CrossOrigin(origins = {"http://terminal.io","http://endpoint.io"})
 @RestController
 @RequestMapping(value="/api")
 public class AuthController {
@@ -210,22 +211,22 @@ public class AuthController {
         return allTokens;
     }
 
-//    @RequestMapping(value = "/token/id", produces = "application/json")
-//    public Object postBodyIdTokens(@RequestBody Map<String, Object> postData){
-//        Object token = tokenRepository.getCodeToken("879560");
-//        return token;
-//    }
     @RequestMapping(value = "/transaction/list/", produces = "application/json")
     public Object postBodyTransactions(@RequestBody Map<String, Object> postData){
         Object allTransactions = transactionRepository.getAllTransactions();
         return allTransactions;
     }
 
+    @CrossOrigin
     @RequestMapping(value = "/transaction/auth", produces = "application/json")
     public String postBodyTransactionAuth(@RequestBody Map<String, Object> postData) throws SQLException {
 
         int execute = Integer.parseInt(postData.get("Execute").toString());
-        int amount = Integer.parseInt(postData.get("Ammount").toString());
+
+        String ammount = (String) postData.get("Ammount");
+        BigDecimal amount = new BigDecimal(ammount);
+
+
         String blikCode = postData.get("BlikCode").toString();
 
 
@@ -241,7 +242,7 @@ public class AuthController {
                 32);
         System.out.println(argon2.verify(hash, password));
 
-        if (argon2.verify(hash, password)) {
+        if (!argon2.verify(hash, password)){return "zle dane logowania";}
             Transaction send = new Transaction();
             Transaction receive = new Transaction();
 
@@ -252,16 +253,24 @@ public class AuthController {
             send.setIsReceived(0);
 
             receive.setAmount(amount);
-            send.setAmount(-amount);
+            send.setAmount(amount);
 
             receive.setBlikToken(tokenRepository.getCodeToken(blikCode).BlikToken);
             send.setBlikToken(tokenRepository.getCodeToken(blikCode).BlikToken);
 
+            userRepository.balanceUpdate(send.GuidToken, receive.GuidToken, amount);
+
             transactionRepository.createTransaction(Integer.parseInt(postData.get("Execute").toString()), receive.GuidToken, receive.IsReceived, receive.Amount, receive.BlikToken);
             transactionRepository.createTransaction(Integer.parseInt(postData.get("Execute").toString()), send.GuidToken, send.IsReceived, send.Amount, send.BlikToken);
 
-            return "udalo sie";
-        }else{return "zle dane logowania";}
+            BigDecimal reciverBalance = userRepository.getGuidUser(receive.GuidToken).getBalance();
+            BigDecimal senderBalance = userRepository.getGuidUser(send.GuidToken).getBalance();
+            System.out.println(reciverBalance);
+            System.out.println(senderBalance);
+            String response = "New reciver balance: "+reciverBalance+"\n"+"New sender balance: "+senderBalance+"\n"+"Transaction amount: "+amount;
+
+            return response;
+            }
     }
 
 
@@ -277,4 +286,4 @@ public class AuthController {
     //SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ssZ");
     //Date date = df.parse("2019-08-07T14:00:00-0400");
 
-}
+

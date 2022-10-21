@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -21,7 +22,8 @@ public class User {
     String GuidToken;
     String Salt;
     String AuthHash;
-    float Balance;
+
+    BigDecimal Balance;
 
 
     public String passwordHashing(String password) {
