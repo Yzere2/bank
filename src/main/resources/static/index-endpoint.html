@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    JavaScript | Sending JSON data to server.
+  </title>
+</head>
+
+<body style="text-align:center;" id="body">
+<h1 style="color:green;">
+  GeeksForGeeks
+</h1>
+
+<p>
+<h1>Create user</h1>
+<!-- Making a text input -->
+<input type="text" id="name" placeholder="Your shop name">
+<input type="text" id="password" placeholder="Your shop password">
+<input type="text" id="execute" placeholder="Execute? 0 or 1">
+<input type="text" id="amount" placeholder="Provide transaction amount:">
+<br><br>
+<input type="text" id="blik" placeholder="Blik code">
+
+
+<!-- Button to send data -->
+<button onclick="sendJSON()">Send JSON</button>
+
+<!-- For printing result from server -->
+<p id="result1" style="color:green"></p>
+
+<!-- Include the JavaScript file -->
+<script src="script-endpoint.js"></script>
+
+</body>
+</html>
