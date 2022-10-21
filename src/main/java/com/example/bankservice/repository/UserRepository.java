@@ -12,9 +12,16 @@ import java.util.List;
 @Repository
 public class UserRepository{
     @Autowired
-        JdbcTemplate jdbcTemplate;
+    JdbcTemplate jdbcTemplate;
+
         public List<User> getAllUsers(){
             return jdbcTemplate.query("SELECT * FROM Users", BeanPropertyRowMapper.newInstance(User.class));
+        }
+        public List<User> getAllUsersGuid(){
+            return jdbcTemplate.query("SELECT GuidToken FROM Users", BeanPropertyRowMapper.newInstance(User.class));
+        }
+        public List<User> getAllUsersName(){
+            return jdbcTemplate.query("SELECT Name FROM Users", BeanPropertyRowMapper.newInstance(User.class));
         }
         public User getIdUser(int id){
             return jdbcTemplate.queryForObject("SELECT * FROM Users WHERE ID="+id, BeanPropertyRowMapper.newInstance(User.class));

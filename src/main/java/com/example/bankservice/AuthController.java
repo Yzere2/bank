@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @CrossOrigin(origins = "http://terminal.io")
@@ -45,9 +47,24 @@ public class AuthController {
     @RequestMapping(value = "/user/new", produces = "application/json")
     public String postBodyNewUser(@RequestBody Map<String, Object> postData) throws NoSuchAlgorithmException, InvalidKeySpecException, SQLException {
         //Enter User data from post
+        UserRepository userRepository = new UserRepository();
+
         User user = new User();
+
         user.Name = (String) postData.get("Name");
+        System.out.println(user.Name);
+        List<String> names = postBodyUsersName();
+        System.out.println(names);
+        System.out.println(names.contains(user.Name.toLowerCase()));
+        if(names.contains(user.Name.toLowerCase())){
+            return "ta nazwa uzytkownika jest zajeta";
+        }
+        List<String> guids = postBodyUsersGuid();
         user.GuidToken = java.util.UUID.randomUUID().toString();
+        while(guids.contains(user.GuidToken)){
+            user.GuidToken = java.util.UUID.randomUUID().toString();
+        }
+
         user.PrincipalName = user.Name+"@company.com";
         int execute = Integer.parseInt(String.valueOf(postData.get("Execute")));
 
@@ -157,6 +174,30 @@ public class AuthController {
         Object allUsers = userRepository.getAllUsers();
         return allUsers;
     }
+    @RequestMapping(value = "/user/list/guid", produces = "application/json")
+    public List<String> postBodyUsersGuid(){
+        List<User> guidUser = userRepository.getAllUsersGuid();
+        List<String> guids = new ArrayList<>();
+        for (int i=0; i<guidUser.size(); i++) {
+            System.out.println(guidUser.get(i).GuidToken);
+            guids.add(guidUser.get(i).GuidToken);
+        }
+        System.out.println(guids);
+        return guids;
+    }
+
+    @RequestMapping(value = "/user/list/name", produces = "application/json")
+    public List<String> postBodyUsersName(){
+        List<User> nameUser = userRepository.getAllUsersName();
+        List<String> names = new ArrayList<>();
+        for (int i=0; i<nameUser.size(); i++) {
+            System.out.println(nameUser.get(i).Name);
+            names.add(nameUser.get(i).Name);
+        }
+        System.out.println(names);
+        return names;
+    }
+
     @CrossOrigin
     @RequestMapping(value = "/user/list/id", produces = "application/json")
     public Object postBodyUsersId(@RequestBody Map<String, Object> postData){
