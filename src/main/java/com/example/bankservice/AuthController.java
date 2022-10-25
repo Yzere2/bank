@@ -5,13 +5,9 @@ import com.example.bankservice.repository.TransactionRepository;
 import com.example.bankservice.repository.UserRepository;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,13 +17,19 @@ import java.util.Map;
 @RestController
 @RequestMapping(value="/api")
 public class AuthController {
-    @Autowired
+    final
     UserRepository userRepository;
 
-    @Autowired
+    final
     TokenRepository tokenRepository;
-    @Autowired
+    final
     TransactionRepository  transactionRepository;
+
+    public AuthController(UserRepository userRepository, TokenRepository tokenRepository, TransactionRepository transactionRepository) {
+        this.userRepository = userRepository;
+        this.tokenRepository = tokenRepository;
+        this.transactionRepository = transactionRepository;
+    }
 
 
     @RequestMapping(value = "", method = RequestMethod.GET)
@@ -41,14 +43,12 @@ public class AuthController {
         return 200;
     }
     @RequestMapping(name = "/fetch", method = RequestMethod.POST)
-    public int createFetch() throws IOException {
+    public int createFetch(){
         return 210;
     }
     @CrossOrigin
     @RequestMapping(value = "/user/new", produces = "text/plain")
-    public String postBodyNewUser(@RequestBody Map<String, Object> postData) throws NoSuchAlgorithmException, InvalidKeySpecException, SQLException {
-        //Enter User data from post
-        UserRepository userRepository = new UserRepository();
+    public String postBodyNewUser(@RequestBody Map<String, Object> postData) throws SQLException {
 
         User user = new User();
 
@@ -74,7 +74,7 @@ public class AuthController {
         System.out.println(NewHash);
 
         //Split Argon2 output into values
-        String[] NewerHash = NewHash.split("\\$|\\,", 8);
+        String[] NewerHash = NewHash.split("[$,]", 8);
 
         //Removing empty cell[0]
         for (int n = 1; n<NewerHash.length; n++){
@@ -122,7 +122,6 @@ public class AuthController {
     @CrossOrigin
     @RequestMapping(value = "/user/auth", produces = "application/json")
     public String postBodyAuthUser(@RequestBody Map<String, Object> postData) throws SQLException {
-        int execute = Integer.valueOf(postData.get("Execute").toString());
 
         String name = (String) postData.get("Name");
         String password = (String) postData.get("Password");
@@ -135,7 +134,7 @@ public class AuthController {
                 16,
                 32);
         System.out.println(argon2.verify(hash, password));
-        String blikCode = null;
+        String blikCode;
         if (argon2.verify(hash, password)) {
             blikCode = Token.blikCodeGen(user.getGuidToken());
             System.out.println(blikCode);
@@ -160,7 +159,7 @@ public class AuthController {
 
                 System.out.print(columnValue + " " + rsmd.getColumnName(i));
             }
-            System.out.println("");
+            System.out.println();
         }
 
 
@@ -175,22 +174,21 @@ public class AuthController {
         BigDecimal balance = new BigDecimal(b);
         System.out.println(balance.getClass());
         userRepository.balanceUpdateManual((String) postData.get("Name"), balance);
-        return "updated "+((String) postData.get("Name"))+" with balance of: "+((String) postData.get("Balance"));
+        return "updated "+ postData.get("Name") +" with balance of: "+ postData.get("Balance");
     }
 
     @CrossOrigin
     @RequestMapping(value = "/user/list", produces = "application/json")
-    public Object postBodyUsers(@RequestBody Map<String, Object> postData){
-        Object allUsers = userRepository.getAllUsers();
-        return allUsers;
+    public Object postBodyUsers(){
+        return userRepository.getAllUsers();
     }
     @RequestMapping(value = "/user/list/guid", produces = "application/json")
     public List<String> postBodyUsersGuid(){
         List<User> guidUser = userRepository.getAllUsersGuid();
         List<String> guids = new ArrayList<>();
-        for (int i=0; i<guidUser.size(); i++) {
-            System.out.println(guidUser.get(i).GuidToken);
-            guids.add(guidUser.get(i).GuidToken);
+        for (User user : guidUser) {
+            System.out.println(user.GuidToken);
+            guids.add(user.GuidToken);
         }
         System.out.println(guids);
         return guids;
@@ -200,9 +198,9 @@ public class AuthController {
     public List<String> postBodyUsersName(){
         List<User> nameUser = userRepository.getAllUsersName();
         List<String> names = new ArrayList<>();
-        for (int i=0; i<nameUser.size(); i++) {
-            System.out.println(nameUser.get(i).Name);
-            names.add(nameUser.get(i).Name);
+        for (User user : nameUser) {
+            System.out.println(user.Name);
+            names.add(user.Name);
         }
         System.out.println(names);
         return names;
@@ -211,19 +209,15 @@ public class AuthController {
     @CrossOrigin
     @RequestMapping(value = "/user/list/id", produces = "application/json")
     public Object postBodyUsersId(@RequestBody Map<String, Object> postData){
-        Object allIdUsers = userRepository.getIdUser((Integer) postData.get("Id"));
-        return allIdUsers;
+        return userRepository.getIdUser((Integer) postData.get("Id"));
     }
     @RequestMapping(value = "/token/list", produces = "application/json")
-    public Object postBodyTokens(@RequestBody Map<String, Object> postData){
-        Object allTokens = tokenRepository.getAllTokens();
-        return allTokens;
-    }
+    public Object postBodyTokens(){
+        return tokenRepository.getAllTokens();}
 
     @RequestMapping(value = "/transaction/list/", produces = "application/json")
-    public Object postBodyTransactions(@RequestBody Map<String, Object> postData){
-        Object allTransactions = transactionRepository.getAllTransactions();
-        return allTransactions;
+    public Object postBodyTransactions(){
+        return transactionRepository.getAllTransactions();
     }
 
     @CrossOrigin
@@ -273,18 +267,19 @@ public class AuthController {
 
             if(!userRepository.balanceUpdate(send.GuidToken, receive.GuidToken, amount)){
                 return "Niewystarczająca ilość środków na koncie";
-            };
+            }
 
-            transactionRepository.createTransaction(Integer.parseInt(postData.get("Execute").toString()), receive.GuidToken, receive.IsReceived, receive.Amount, receive.BlikToken);
-            transactionRepository.createTransaction(Integer.parseInt(postData.get("Execute").toString()), send.GuidToken, send.IsReceived, send.Amount, send.BlikToken);
+            if(execute==1) {
+                transactionRepository.createTransaction(Integer.parseInt(postData.get("Execute").toString()), receive.GuidToken, receive.IsReceived, receive.Amount, receive.BlikToken);
+                transactionRepository.createTransaction(Integer.parseInt(postData.get("Execute").toString()), send.GuidToken, send.IsReceived, send.Amount, send.BlikToken);
+            }
 
             BigDecimal reciverBalance = userRepository.getGuidUser(receive.GuidToken).getBalance();
             BigDecimal senderBalance = userRepository.getGuidUser(send.GuidToken).getBalance();
             System.out.println(reciverBalance);
             System.out.println(senderBalance);
-            String response = "New reciver balance: "+reciverBalance+"\n"+"New sender balance: "+senderBalance+"\n"+"Transaction amount: "+amount;
 
-            return response;
+            return "New reciver balance: "+reciverBalance+"\n"+"New sender balance: "+senderBalance+"\n"+"Transaction amount: "+amount;
             }
     }
 
