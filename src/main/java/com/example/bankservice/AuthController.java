@@ -256,7 +256,11 @@ public class AuthController {
             Transaction receive = new Transaction();
 
             receive.setGuidToken(user.getGuidToken());
-            send.setGuidToken(tokenRepository.getCodeToken(blikCode).GuidToken);
+            try{
+                send.setGuidToken(tokenRepository.getCodeToken(blikCode).GuidToken);
+            }catch (Exception e){
+                return "zły kod blik";
+            }
 
             receive.setIsReceived(1);
             send.setIsReceived(0);

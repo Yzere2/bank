@@ -44,7 +44,7 @@ public class UserRepository{
             User sender = getGuidUser(SenderGuid);
             User reciver = getGuidUser(ReciverGuid);
             BigDecimal senderBalance = sender.getBalance();
-            if(senderBalance.compareTo(amount)>0){
+            if(senderBalance.compareTo(amount)>=0){
                 System.out.println("senderBalance is higher than amount");
                 return true;}
             return false;
