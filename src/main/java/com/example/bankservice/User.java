@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -26,6 +28,12 @@ public class User {
     BigDecimal Balance;
 
 
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+    public String balanceUpdate(String name, String ammount){
+        jdbcTemplate.execute("UPDATE `Users` SET `Balance` = '"+ammount+"' WHERE `Users`.`Name`="+name);
+        return "added balance of "+ammount+" to "+name;
+    }
     public String passwordHashing(String password) {
             // salt 32 bytes
             // Hash length 64 bytes

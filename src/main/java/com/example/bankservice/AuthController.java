@@ -45,7 +45,7 @@ public class AuthController {
         return 210;
     }
     @CrossOrigin
-    @RequestMapping(value = "/user/new", produces = "application/json")
+    @RequestMapping(value = "/user/new", produces = "text/plain")
     public String postBodyNewUser(@RequestBody Map<String, Object> postData) throws NoSuchAlgorithmException, InvalidKeySpecException, SQLException {
         //Enter User data from post
         UserRepository userRepository = new UserRepository();
@@ -68,7 +68,6 @@ public class AuthController {
 
         user.PrincipalName = user.Name+"@company.com";
         int execute = Integer.parseInt(String.valueOf(postData.get("Execute")));
-
 
         //Generating Hash
         String NewHash = user.passwordHashing((String) postData.get("Password"));
@@ -168,6 +167,16 @@ public class AuthController {
         return 200+"haha";
     }
 
+    @CrossOrigin
+    @RequestMapping(value = "/user/balance/update", produces = "text/plain")
+    public String postBodyBalanceOnCreation(@RequestBody Map<String, Object> postData){
+        String b = String.valueOf(postData.get("Balance"));
+        System.out.println(b.getClass());
+        BigDecimal balance = new BigDecimal(b);
+        System.out.println(balance.getClass());
+        userRepository.balanceUpdateManual((String) postData.get("Name"), balance);
+        return "updated "+((String) postData.get("Name"))+" with balance of: "+((String) postData.get("Balance"));
+    }
 
     @CrossOrigin
     @RequestMapping(value = "/user/list", produces = "application/json")
@@ -258,7 +267,9 @@ public class AuthController {
             receive.setBlikToken(tokenRepository.getCodeToken(blikCode).BlikToken);
             send.setBlikToken(tokenRepository.getCodeToken(blikCode).BlikToken);
 
-            userRepository.balanceUpdate(send.GuidToken, receive.GuidToken, amount);
+            if(!userRepository.balanceUpdate(send.GuidToken, receive.GuidToken, amount)){
+                return "Niewystarczająca ilość środków na koncie";
+            };
 
             transactionRepository.createTransaction(Integer.parseInt(postData.get("Execute").toString()), receive.GuidToken, receive.IsReceived, receive.Amount, receive.BlikToken);
             transactionRepository.createTransaction(Integer.parseInt(postData.get("Execute").toString()), send.GuidToken, send.IsReceived, send.Amount, send.BlikToken);

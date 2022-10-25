@@ -35,6 +35,11 @@ public class UserRepository{
             return jdbcTemplate.queryForObject(query, BeanPropertyRowMapper.newInstance(User.class));
         }
 
+        public boolean balanceUpdateManual(String name, BigDecimal balance){
+            //jdbcTemplate.execute("UPDATE Users SET Balance='"+balance+"' WHERE Name='"+name+"';");
+            jdbcTemplate.update("UPDATE Users SET Balance=? WHERE Name=?",balance.toString(),name);
+            return true;
+        }
         public boolean balanceCheck(String SenderGuid, String ReciverGuid, BigDecimal amount){
             User sender = getGuidUser(SenderGuid);
             User reciver = getGuidUser(ReciverGuid);
